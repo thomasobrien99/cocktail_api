@@ -30,8 +30,6 @@ class IngredientSchema(Schema):
 	ingredient = fields.String()
 	cocktails = fields.Nested(CocktailSchema, many=True, exclude=('ingredients'))
 
-c_schema = CocktailSchema()
-i_schema = IngredientSchema()
 
 class CocktailApi(Resource):
 	def get(self, id):
