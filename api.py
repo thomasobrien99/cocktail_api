@@ -1,12 +1,10 @@
-from flask import Flask, render_template, request
-from flask_sqlalchemy import SQLAlchemy
-from flask_restful import Api, Resource, reqparse
+from flask import Flask, request
+from flask_restful import Api, Resource
 from marshmallow import Schema, fields
 from models.shared import db
 from models.cocktails import Cocktail
 from models.ingredients import Ingredient
 from models.cocktail_ingredients import Cocktail_Ingredient
-import json
 
 app = Flask(__name__)
 api = Api(app)
@@ -51,14 +49,6 @@ iid_schema = IngredientIdSchema()
 
 class CocktailApi(Resource):
 	def get(self, id):
-		# import pdb; pdb.set_trace()
-		# if str(request.query_string[0:6]) == 'filter':
-		# 	custom_filter = '='.split(query_string[6:])[0]
-		# 	filter_args = '='.split(query_string[6:])[1]
-
-		# if custom_filter == 'ingredients':
-		filtered = Cocktail.query.filter_by().all()[0]
-		parser = reqparse.RequestParser()
 		return c_schema.dump(Cocktail.query.get(id))
 
 class CocktailListApi(Resource):
@@ -66,7 +56,7 @@ class CocktailListApi(Resource):
 		all_cocktails = Cocktail.query.all()
 		filtered_cocktails =[]
 		if 'filter' in request.args and request.args['filter'] == 'ingredients':
-			ingredient_ids = [int(x) for x in request.args['params'].split('^')]
+			ingredient_ids = [int(x) for x in request.args['params'].split('^') if x]
 			
 			for x in range(0, len(all_cocktails)):
 				current_ingredient_ids = []
@@ -82,7 +72,7 @@ class CocktailListApi(Resource):
 			return c_schema.dump(filtered_cocktails, many=True)
 
 		if 'filter' in request.args and request.args['filter'] == 'ids':
-			cocktail_ids = [int(x) for x in request.args['params'].split('^')]
+			cocktail_ids = [int(x) for x in request.args['params'].split('^') if x]
 			while len(cocktail_ids):
 				filtered_cocktails.append(Cocktail.query.get(cocktail_ids.pop()))
 			if request.args['type'] == 'ids':
@@ -90,8 +80,8 @@ class CocktailListApi(Resource):
 			return c_schema.dump(filtered_cocktails, many=True)
 
 		if 'type' in request.args and request.args['type'] == 'ids':
-				return cid_schema.dump(all_cocktails[0:100], many=True)
-		return c_schema.dump(all_cocktails[0:100], many=True)
+				return cid_schema.dump(all_cocktails, many=True)
+		return c_schema.dump(all_cocktails, many=True)
 
 class IngredientApi(Resource):
 	def get(self, id):
@@ -100,7 +90,7 @@ class IngredientApi(Resource):
 class IngredientListApi(Resource):
 	def get(self):
 		if 'filter' in request.args and request.args['filter'] == 'ids':
-			id_params = [int(x) for x in request.args['params'].split('^')]
+			id_params = [int(x) for x in request.args['params'].split('^') if x]
 			test = [x for x in Ingredient.query.all() if x.id in id_params]
 			return iid_schema.dump(test, many=True)
 
