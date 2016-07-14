@@ -58,14 +58,18 @@ class CocktailListApi(Resource):
 		if 'filter' in request.args and request.args['filter'] == 'ingredients':
 			ingredient_ids = [int(x) for x in request.args['params'].split('^') if x]
 			
-			for x in range(0, len(all_cocktails)):
-				current_ingredient_ids = []
-				
-				for y in range(0, len(all_cocktails[x].ingredients)):
-					current_ingredient_ids.append(all_cocktails[x].ingredients[y].ingredient_id)
-				
-				if(set(current_ingredient_ids).issubset(set(ingredient_ids))):
-					filtered_cocktails.append(all_cocktails[x])
+			test = Cocktail_Ingredient.query.all()
+			test = [x.cocktail for x in test if x.ingredient_id in ingredient_ids]
+			possible_cocktails= list(set(test))
+
+			for x in possible_cocktails:
+				if len(x.ingredients) > len(ingredient_ids):
+					continue
+				for y in range(0,len(x.ingredients)):
+					if x.ingredients[y].ingredient_id not in ingredient_ids:
+					  break
+					if y == (len(x.ingredients) - 1):
+						filtered_cocktails.append(x)
 			
 			if request.args['type'] == 'ids':
 				return cid_schema.dump(filtered_cocktails, many=True)
